@@ -1,0 +1,33 @@
+# ── Environment ────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ── OS ─────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── IDE ────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ── Go ─────────────────────────────────
+apps/api/tmp/
+apps/api/bin/
+apps/api/server
+apps/api/netpulse-api
+
+# ── Node / Next.js ─────────────────────
+node_modules/
+apps/web/.next/
+apps/web/out/
+.turbo/
+
+# ── Docker volumes ─────────────────────
+pg_data/
+redis_data/
+
+# ── Uploads (local dev) ───────────────
+apps/api/uploads/
