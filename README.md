@@ -32,14 +32,14 @@
 
 ## 🛠 Tech Stack
 
-| Layer        | Technology                                  |
-| ------------ | ------------------------------------------- |
+| Layer        | Technology                                                                 |
+| ------------ | -------------------------------------------------------------------------- |
 | **Frontend** | Next.js 15 (App Router, SSG/ISR), React 19, Tailwind CSS 4, TypeScript 5.7 |
-| **Backend**  | Go 1.22, Chi v5 router, zerolog             |
-| **Database** | PostgreSQL 16 (FTS, GIN indexes)            |
-| **Cache**    | Redis 7 (caching, rate limiting)            |
-| **Auth**     | JWT (HS256), Google OAuth 2.0, bcrypt       |
-| **Infra**    | Docker Compose, Nginx, Cloudflare (WAF, CDN, DDoS protection) |
+| **Backend**  | Go 1.22, Chi v5 router, zerolog                                            |
+| **Database** | PostgreSQL 16 (FTS, GIN indexes)                                           |
+| **Cache**    | Redis 7 (caching, rate limiting)                                           |
+| **Auth**     | JWT (HS256), Google OAuth 2.0, bcrypt                                      |
+| **Infra**    | Docker Compose, Nginx, Cloudflare (WAF, CDN, DDoS protection)              |
 
 ## 🚀 Getting Started
 
@@ -80,11 +80,11 @@ make dev-web
 
 ### Access Points
 
-| Service        | URL                           |
-| -------------- | ----------------------------- |
-| Web Frontend   | http://localhost:3000          |
-| REST API       | http://localhost:8080          |
-| Health Check   | http://localhost:8080/health   |
+| Service      | URL                          |
+| ------------ | ---------------------------- |
+| Web Frontend | http://localhost:3000        |
+| REST API     | http://localhost:8080        |
+| Health Check | http://localhost:8080/health |
 
 ## 📁 Project Structure
 
@@ -138,38 +138,38 @@ NetPulse/
 
 ### Public
 
-| Method | Endpoint              | Description                    |
-| ------ | --------------------- | ------------------------------ |
-| GET    | `/health`             | Health check                   |
-| GET    | `/posts`              | List posts (paginated, filter) |
-| GET    | `/posts/:slug`        | Get post by slug               |
-| GET    | `/categories`         | List categories                |
-| GET    | `/tags`               | List tags                      |
-| GET    | `/search?q=`          | Full-text search               |
-| GET    | `/search/suggest?q=`  | Autocomplete suggestions       |
+| Method | Endpoint             | Description                    |
+| ------ | -------------------- | ------------------------------ |
+| GET    | `/health`            | Health check                   |
+| GET    | `/posts`             | List posts (paginated, filter) |
+| GET    | `/posts/:slug`       | Get post by slug               |
+| GET    | `/categories`        | List categories                |
+| GET    | `/tags`              | List tags                      |
+| GET    | `/search?q=`         | Full-text search               |
+| GET    | `/search/suggest?q=` | Autocomplete suggestions       |
 
 ### Authentication
 
-| Method | Endpoint          | Description         |
-| ------ | ----------------- | ------------------- |
-| POST   | `/auth/login`     | Login (email/pass)  |
-| POST   | `/auth/refresh`   | Refresh JWT token   |
-| POST   | `/auth/logout`    | Logout              |
+| Method | Endpoint        | Description        |
+| ------ | --------------- | ------------------ |
+| POST   | `/auth/login`   | Login (email/pass) |
+| POST   | `/auth/refresh` | Refresh JWT token  |
+| POST   | `/auth/logout`  | Logout             |
 
 ### Admin (Protected)
 
-| Method | Endpoint                         | Description                            |
-| ------ | -------------------------------- | -------------------------------------- |
-| GET    | `/admin/posts`                   | List all posts                         |
-| POST   | `/admin/posts`                   | Create post                            |
-| PUT    | `/admin/posts/:id`               | Update post                            |
-| POST   | `/admin/posts/:id/publish`       | Publish post                           |
-| POST   | `/admin/posts/:id/schedule`      | Schedule post                          |
-| GET    | `/admin/users`                   | List users                             |
-| POST   | `/admin/users/invite`            | Invite new user                        |
-| PUT    | `/admin/users/:id/role`          | Change user role                       |
-| GET    | `/admin/settings`                | Get site settings                      |
-| PUT    | `/admin/settings`                | Update site settings                   |
+| Method | Endpoint                    | Description          |
+| ------ | --------------------------- | -------------------- |
+| GET    | `/admin/posts`              | List all posts       |
+| POST   | `/admin/posts`              | Create post          |
+| PUT    | `/admin/posts/:id`          | Update post          |
+| POST   | `/admin/posts/:id/publish`  | Publish post         |
+| POST   | `/admin/posts/:id/schedule` | Schedule post        |
+| GET    | `/admin/users`              | List users           |
+| POST   | `/admin/users/invite`       | Invite new user      |
+| PUT    | `/admin/users/:id/role`     | Change user role     |
+| GET    | `/admin/settings`           | Get site settings    |
+| PUT    | `/admin/settings`           | Update site settings |
 
 > Full API documentation available in [docs/api.md](docs/api.md)
 
@@ -194,24 +194,24 @@ make clean         # Remove containers, volumes, build cache
 
 NetPulse implements security at every layer:
 
-| Layer           | Implementation                                                                 |
-| --------------- | ------------------------------------------------------------------------------ |
-| **Edge**        | Cloudflare WAF rules, DDoS protection, bot management                          |
+| Layer           | Implementation                                                                          |
+| --------------- | --------------------------------------------------------------------------------------- |
+| **Edge**        | Cloudflare WAF rules, DDoS protection, bot management                                   |
 | **Transport**   | TLS termination via Cloudflare, security headers (nosniff, DENY frame, strict referrer) |
 | **Application** | JWT auth (15min access / 30-day refresh), rate limiting (login: 10/min, search: 30/min) |
 | **Data**        | bcrypt password hashing, AES-GCM encryption for sensitive fields, parameterized queries |
-| **Audit**       | Complete audit trail on all write operations (who, what, when, where)           |
+| **Audit**       | Complete audit trail on all write operations (who, what, when, where)                   |
 
 ## 📚 Documentation
 
-| Document                                      | Description                        |
-| --------------------------------------------- | ---------------------------------- |
-| [docs/architecture.md](docs/architecture.md)  | System architecture & design       |
-| [docs/api.md](docs/api.md)                    | Full API reference                 |
-| [docs/database.md](docs/database.md)          | Database schema & migrations       |
-| [docs/security.md](docs/security.md)          | Security implementation details    |
-| [docs/seo-adsense.md](docs/seo-adsense.md)    | SEO & AdSense configuration        |
-| [docs/runbook.md](docs/runbook.md)            | Operations runbook                 |
+| Document                                     | Description                     |
+| -------------------------------------------- | ------------------------------- |
+| [docs/architecture.md](docs/architecture.md) | System architecture & design    |
+| [docs/api.md](docs/api.md)                   | Full API reference              |
+| [docs/database.md](docs/database.md)         | Database schema & migrations    |
+| [docs/security.md](docs/security.md)         | Security implementation details |
+| [docs/seo-adsense.md](docs/seo-adsense.md)   | SEO & AdSense configuration     |
+| [docs/runbook.md](docs/runbook.md)           | Operations runbook              |
 
 ## 🤝 Contributing
 
