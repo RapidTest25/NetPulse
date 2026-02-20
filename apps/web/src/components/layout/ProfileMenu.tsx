@@ -115,31 +115,13 @@ export default function ProfileMenu() {
   // Show a skeleton placeholder matching the same dimensions until client mounts
   // This prevents the flash of login/register buttons or avatar on hydration
   if (!mounted) {
-    return (
-      <div className="flex items-center gap-2">
-        <div className="h-9 w-16 animate-pulse rounded-full bg-gray-100" />
-        <div className="h-9 w-16 animate-pulse rounded-full bg-gray-100" />
-      </div>
-    );
+    return null;
   }
 
+  // Per policy: NO visible login/register buttons on the public blog.
+  // Admin login is accessible via hidden URL only.
   if (!authAPI.isLoggedIn() || !user) {
-    return (
-      <div className="flex items-center gap-2">
-        <Link
-          href="/auth/login"
-          className="rounded-full border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
-        >
-          Masuk
-        </Link>
-        <Link
-          href="/auth/register"
-          className="rounded-full bg-linear-to-r from-sky-500 to-cyan-500 px-4 py-2 text-sm font-medium text-white shadow-sm transition-shadow hover:shadow-md"
-        >
-          Daftar
-        </Link>
-      </div>
-    );
+    return null;
   }
 
   const items = menuItems(user.role);

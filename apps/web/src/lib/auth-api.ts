@@ -473,6 +473,79 @@ export const adminAPI = {
       body: JSON.stringify(data),
     }),
 
+  // Store content (admin)
+  getStoreContent: () =>
+    authFetch<Record<string, any>>("/admin/store/content"),
+  updateStoreContent: (data: Record<string, any>) =>
+    authFetch<any>("/admin/store/content", {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+
+  // Store listings (admin)
+  getStoreListings: (params?: { page?: number; limit?: number; search?: string; type?: string }) => {
+    const sp = new URLSearchParams();
+    if (params?.page) sp.set("page", String(params.page));
+    if (params?.limit) sp.set("limit", String(params.limit));
+    if (params?.search) sp.set("search", params.search);
+    if (params?.type) sp.set("type", params.type);
+    return authFetch<any>(`/admin/store/listings?${sp.toString()}`);
+  },
+  getStoreListing: (id: string) => authFetch<any>(`/admin/store/listings/${id}`),
+  createStoreListing: (data: Record<string, any>) =>
+    authFetch<any>("/admin/store/listings", { method: "POST", body: JSON.stringify(data) }),
+  updateStoreListing: (id: string, data: Record<string, any>) =>
+    authFetch<any>(`/admin/store/listings/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteStoreListing: (id: string) =>
+    authFetch<any>(`/admin/store/listings/${id}`, { method: "DELETE" }),
+
+  // Store packages (admin)
+  addStorePackage: (listingId: string, data: Record<string, any>) =>
+    authFetch<any>(`/admin/store/listings/${listingId}/packages`, { method: "POST", body: JSON.stringify(data) }),
+  updateStorePackage: (listingId: string, pkgId: string, data: Record<string, any>) =>
+    authFetch<any>(`/admin/store/listings/${listingId}/packages/${pkgId}`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteStorePackage: (listingId: string, pkgId: string) =>
+    authFetch<any>(`/admin/store/listings/${listingId}/packages/${pkgId}`, { method: "DELETE" }),
+
+  // Store orders (admin)
+  getStoreOrders: (params?: { page?: number; limit?: number; status?: string; search?: string }) => {
+    const sp = new URLSearchParams();
+    if (params?.page) sp.set("page", String(params.page));
+    if (params?.limit) sp.set("limit", String(params.limit));
+    if (params?.status) sp.set("status", params.status);
+    if (params?.search) sp.set("search", params.search);
+    return authFetch<any>(`/admin/store/orders?${sp.toString()}`);
+  },
+  getStoreOrder: (id: string) => authFetch<any>(`/admin/store/orders/${id}`),
+  updateStoreOrder: (id: string, data: Record<string, any>) =>
+    authFetch<any>(`/admin/store/orders/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+
+  // Store portfolio (admin)
+  getStorePortfolio: (params?: { page?: number; limit?: number }) => {
+    const sp = new URLSearchParams();
+    if (params?.page) sp.set("page", String(params.page));
+    if (params?.limit) sp.set("limit", String(params.limit));
+    return authFetch<any>(`/admin/store/portfolio?${sp.toString()}`);
+  },
+  createStorePortfolio: (data: Record<string, any>) =>
+    authFetch<any>("/admin/store/portfolio", { method: "POST", body: JSON.stringify(data) }),
+  updateStorePortfolio: (id: string, data: Record<string, any>) =>
+    authFetch<any>(`/admin/store/portfolio/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  deleteStorePortfolio: (id: string) =>
+    authFetch<any>(`/admin/store/portfolio/${id}`, { method: "DELETE" }),
+
+  // Store payment (admin)
+  getStorePaymentSettings: () => authFetch<any>("/admin/store/payment/settings"),
+  updateStorePaymentSetting: (id: string, data: Record<string, any>) =>
+    authFetch<any>(`/admin/store/payment/settings/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+  getStorePaymentMethods: () => authFetch<any>("/admin/store/payment/methods"),
+  updateStorePaymentMethod: (id: string, data: Record<string, any>) =>
+    authFetch<any>(`/admin/store/payment/methods/${id}`, { method: "PATCH", body: JSON.stringify(data) }),
+
+  // Store reviews (admin)
+  toggleStoreReview: (id: string) =>
+    authFetch<any>(`/admin/store/reviews/${id}/toggle`, { method: "PATCH" }),
+
   // Media upload
   uploadMedia: async (
     file: File,

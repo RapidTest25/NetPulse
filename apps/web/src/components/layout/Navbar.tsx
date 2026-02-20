@@ -314,28 +314,31 @@ export function Navbar() {
           >
             {/* Inline Search */}
             <div className="relative flex items-center">
-              <button
-                onClick={() => setSearchOpen(!searchOpen)}
-                className="flex h-9 w-9 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
-                title="Cari (Ctrl+K)"
-              >
-                <svg
-                  className="h-[18px] w-[18px]"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  strokeWidth={2}
-                  stroke="currentColor"
+              {!searchOpen && (
+                <button
+                  onClick={() => setSearchOpen(true)}
+                  className="flex h-9 w-9 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+                  title="Cari (Ctrl+K)"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-                  />
-                </svg>
-              </button>
+                  <svg
+                    className="h-[18px] w-[18px]"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2}
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+                    />
+                  </svg>
+                </button>
+              )}
+              {searchOpen && (
               <form
                 onSubmit={handleSearch}
-                className={`absolute right-0 top-1/2 -translate-y-1/2 overflow-hidden transition-all duration-300 ease-in-out ${searchOpen ? "w-72 opacity-100" : "w-0 opacity-0 pointer-events-none"}`}
+                className="relative w-64 animate-fade-in-up"
               >
                 <input
                   ref={searchInputRef}
@@ -383,10 +386,11 @@ export function Navbar() {
                   </div>
                 )}
               </form>
+              )}
 
               {/* Search Results Dropdown */}
               {searchOpen && (suggestions.length > 0 || showResults) && (
-                <div className="absolute right-0 top-full mt-2 w-80 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl shadow-gray-200/50 z-50">
+                <div className="absolute right-0 top-full mt-2 w-72 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl shadow-gray-200/50 z-50">
                   {/* Suggestions */}
                   {!showResults && suggestions.length > 0 && (
                     <>

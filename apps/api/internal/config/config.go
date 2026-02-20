@@ -23,8 +23,8 @@ type Config struct {
 	RedisPassword string
 
 	// API
-	APIPort  string
-	BaseURL  string
+	APIPort string
+	BaseURL string
 
 	// JWT
 	JWTAccessSecret  string
@@ -42,6 +42,19 @@ type Config struct {
 	GoogleClientID     string
 	GoogleClientSecret string
 	GoogleRedirectURL  string
+
+	// Store
+	StoreURL string
+
+	// Payment - Tripay
+	TripayAPIKey       string
+	TripayPrivateKey   string
+	TripayMerchantCode string
+	TripaySandbox      bool
+
+	// Payment - Paydisini
+	PaydisiniAPIKey  string
+	PaydisiniSandbox bool
 }
 
 func (c *Config) DatabaseDSN() string {

@@ -1,0 +1,11 @@
+export { default as HeroSection } from "./HeroSection";
+export { default as TrustBadges } from "./TrustBadges";
+export { default as ProblemSection } from "./ProblemSection";
+export { default as CategorySection } from "./CategorySection";
+export { default as PortfolioSection } from "./PortfolioSection";
+export { default as ComparisonSection } from "./ComparisonSection";
+export { default as ListingSection } from "./ListingSection";
+export { default as PricingSection } from "./PricingSection";
+export { default as TestimonialSection } from "./TestimonialSection";
+export { default as FAQSection } from "./FAQSection";
+export { default as CTASection } from "./CTASection";

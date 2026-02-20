@@ -31,8 +31,8 @@ func Load() *Config {
 		RedisPort:     getEnv("REDIS_PORT", "6379"),
 		RedisPassword: getEnv("REDIS_PASSWORD", ""),
 
-		APIPort:  getEnv("API_PORT", "8080"),
-		BaseURL:  getEnv("API_BASE_URL", "http://localhost:8080"),
+		APIPort: getEnv("API_PORT", "8080"),
+		BaseURL: getEnv("API_BASE_URL", "http://localhost:8080"),
 
 		JWTAccessSecret:  getEnv("JWT_ACCESS_SECRET", "dev-access-secret"),
 		JWTRefreshSecret: getEnv("JWT_REFRESH_SECRET", "dev-refresh-secret"),
@@ -45,5 +45,15 @@ func Load() *Config {
 		GoogleClientID:     getEnv("GOOGLE_CLIENT_ID", ""),
 		GoogleClientSecret: getEnv("GOOGLE_CLIENT_SECRET", ""),
 		GoogleRedirectURL:  getEnv("GOOGLE_REDIRECT_URL", "http://localhost:8080/auth/google/callback"),
+
+		StoreURL: getEnv("STORE_URL", "http://localhost:3001"),
+
+		TripayAPIKey:       getEnv("TRIPAY_API_KEY", ""),
+		TripayPrivateKey:   getEnv("TRIPAY_PRIVATE_KEY", ""),
+		TripayMerchantCode: getEnv("TRIPAY_MERCHANT_CODE", ""),
+		TripaySandbox:      getEnv("TRIPAY_SANDBOX", "true") == "true",
+
+		PaydisiniAPIKey:  getEnv("PAYDISINI_API_KEY", ""),
+		PaydisiniSandbox: getEnv("PAYDISINI_SANDBOX", "true") == "true",
 	}
 }

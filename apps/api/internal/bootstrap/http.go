@@ -15,14 +15,17 @@ import (
 
 	"github.com/rapidtest/netpulse-api/internal/config"
 	"github.com/rapidtest/netpulse-api/internal/domain/posts"
+	"github.com/rapidtest/netpulse-api/internal/gateway"
 	"github.com/rapidtest/netpulse-api/internal/http/handlers"
 	adminHandlers "github.com/rapidtest/netpulse-api/internal/http/handlers/admin"
 	authorHandlers "github.com/rapidtest/netpulse-api/internal/http/handlers/author"
 	publicHandlers "github.com/rapidtest/netpulse-api/internal/http/handlers/public"
+	storeHandlers "github.com/rapidtest/netpulse-api/internal/http/handlers/store"
 	"github.com/rapidtest/netpulse-api/internal/http/middleware"
 	"github.com/rapidtest/netpulse-api/internal/repository/postgres"
 	redisRepo "github.com/rapidtest/netpulse-api/internal/repository/redis"
 	"github.com/rapidtest/netpulse-api/internal/security"
+	"github.com/rapidtest/netpulse-api/internal/utils"
 )
 
 // NewHTTP wires up all dependencies and returns a configured router.
@@ -35,7 +38,7 @@ func NewHTTP(cfg *config.Config, db *pgxpool.Pool, rdb *redis.Client) http.Handl
 	r.Use(chimw.Recoverer)
 	r.Use(middleware.SecurityHeaders)
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000", "http://localhost:3001", cfg.BaseURL},
+		AllowedOrigins:   []string{"http://localhost:3000", "http://localhost:3001", cfg.BaseURL, cfg.StoreURL},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-Request-ID"},
 		ExposedHeaders:   []string{"X-Request-ID"},
@@ -62,6 +65,12 @@ func NewHTTP(cfg *config.Config, db *pgxpool.Pool, rdb *redis.Client) http.Handl
 	cacheRepo := redisRepo.NewCache(rdb)
 	engCache := redisRepo.NewEngagementCache(rdb)
 	rateLimiter := redisRepo.NewRateLimiter(rdb)
+
+	// Store repositories
+	listingsRepo := postgres.NewListingsRepo(db)
+	ordersRepo := postgres.NewOrdersRepo(db)
+	portfolioRepo := postgres.NewPortfolioRepo(db)
+	paymentRepo := postgres.NewPaymentRepo(db)
 
 	// ── Security ─────────────────────────────────────────
 	tokenSvc := security.NewTokenService(cfg)
@@ -117,6 +126,14 @@ func NewHTTP(cfg *config.Config, db *pgxpool.Pool, rdb *redis.Client) http.Handl
 	// Admin author requests handler
 	adminAuthorReqH := adminHandlers.NewAuthorRequestAdminHandler(authorRequestRepo, auditRepo)
 	_ = inviteRepo // available for future enhanced invite flow
+
+	// ── Payment gateways ─────────────────────────────────
+	tripayClient := gateway.NewTripayClient(cfg.TripayAPIKey, cfg.TripayPrivateKey, cfg.TripayMerchantCode, cfg.TripaySandbox)
+	paydisiniClient := gateway.NewPaydisiniClient(cfg.PaydisiniAPIKey, cfg.PaydisiniSandbox)
+
+	// ── Store handlers ───────────────────────────────────
+	storePublicH := storeHandlers.NewPublicHandler(listingsRepo, ordersRepo, portfolioRepo, paymentRepo, tripayClient, paydisiniClient, cfg.StoreURL)
+	storeAdminH := storeHandlers.NewAdminHandler(listingsRepo, ordersRepo, portfolioRepo, paymentRepo, auditRepo)
 
 	// ── Auth middleware ──────────────────────────────────
 	authMW := middleware.NewAuthMiddleware(tokenSvc)
@@ -306,6 +323,103 @@ func NewHTTP(cfg *config.Config, db *pgxpool.Pool, rdb *redis.Client) http.Handl
 			r.Post("/payouts/{id}/mark-paid", adminAffiliateH.MarkPaid)
 			r.Post("/release-commissions", adminAffiliateH.ReleaseHeldCommissions)
 		})
+
+		// ── Admin Store Management ──────────────────────
+		r.Route("/store", func(r chi.Router) {
+			r.Use(middleware.RBAC("store.manage"))
+
+			// Listings
+			r.Route("/listings", func(r chi.Router) {
+				r.Get("/", storeAdminH.ListListings)
+				r.Post("/", storeAdminH.CreateListing)
+				r.Get("/{id}", storeAdminH.GetListing)
+				r.Patch("/{id}", storeAdminH.UpdateListing)
+				r.Patch("/{id}/delivery", storeAdminH.UpdateDelivery)
+				r.Delete("/{id}", storeAdminH.DeleteListing)
+
+				// Packages
+				r.Post("/{id}/packages", storeAdminH.AddPackage)
+				r.Patch("/{id}/packages/{pkgId}", storeAdminH.UpdatePackage)
+				r.Delete("/{id}/packages/{pkgId}", storeAdminH.DeletePackage)
+
+				// FAQ
+				r.Post("/{id}/faq", storeAdminH.AddFAQ)
+				r.Delete("/{id}/faq/{faqId}", storeAdminH.DeleteFAQ)
+			})
+
+			// Orders
+			r.Route("/orders", func(r chi.Router) {
+				r.Get("/", storeAdminH.ListOrders)
+				r.Get("/{id}", storeAdminH.GetOrder)
+				r.Patch("/{id}", storeAdminH.UpdateOrder)
+			})
+
+			// Portfolio
+			r.Route("/portfolio", func(r chi.Router) {
+				r.Get("/", storeAdminH.ListPortfolio)
+				r.Post("/", storeAdminH.CreatePortfolio)
+				r.Get("/{id}", storeAdminH.GetPortfolioItem)
+				r.Patch("/{id}", storeAdminH.UpdatePortfolio)
+				r.Delete("/{id}", storeAdminH.DeletePortfolio)
+				r.Post("/{id}/images", storeAdminH.AddPortfolioImage)
+				r.Delete("/{id}/images/{imgId}", storeAdminH.DeletePortfolioImage)
+			})
+
+			// Payment settings
+			r.Route("/payment", func(r chi.Router) {
+				r.Get("/settings", storeAdminH.GetPaymentSettings)
+				r.Patch("/settings/{id}", storeAdminH.UpdatePaymentSettings)
+				r.Get("/methods", storeAdminH.GetPaymentMethods)
+				r.Patch("/methods/{id}", storeAdminH.UpdatePaymentMethod)
+			})
+
+			// Notification templates
+			r.Get("/templates", storeAdminH.GetTemplates)
+			r.Patch("/templates/{id}", storeAdminH.UpdateTemplate)
+
+			// Categories
+			r.Get("/categories", storeAdminH.ListCategories)
+
+			// Reviews
+			r.Patch("/reviews/{id}/toggle", storeAdminH.ToggleReview)
+
+			// Store Content Management (landing page sections)
+			r.Route("/content", func(r chi.Router) {
+				r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+					all, err := settingsRepo.GetAll(r.Context())
+					if err != nil {
+						utils.JSONError(w, http.StatusInternalServerError, "failed to load content")
+						return
+					}
+					content := map[string]json.RawMessage{}
+					for k, v := range all {
+						if len(k) > 6 && k[:6] == "store_" && v != "" {
+							content[k] = json.RawMessage(v)
+						}
+					}
+					utils.JSONResponse(w, http.StatusOK, content)
+				})
+
+				r.Patch("/", func(w http.ResponseWriter, r *http.Request) {
+					var body map[string]json.RawMessage
+					if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+						utils.JSONError(w, http.StatusBadRequest, "invalid request body")
+						return
+					}
+					for k, v := range body {
+						if len(k) > 6 && k[:6] == "store_" {
+							if err := settingsRepo.Set(r.Context(), k, string(v)); err != nil {
+								utils.JSONError(w, http.StatusInternalServerError, "failed to save "+k)
+								return
+							}
+						}
+					}
+					userID, _ := r.Context().Value(middleware.CtxUserID).(string)
+					_ = auditRepo.Log(r.Context(), userID, "update", "store_content", "", "", r.RemoteAddr)
+					utils.JSONResponse(w, http.StatusOK, map[string]string{"message": "store content updated"})
+				})
+			})
+		})
 	})
 
 	// ── User Panel API (authenticated users) ─────────────
@@ -357,7 +471,63 @@ func NewHTTP(cfg *config.Config, db *pgxpool.Pool, rdb *redis.Client) http.Handl
 		})
 	})
 
-	// ── Post save/unsave (authenticated) ────────────────
+	// ═══════════════════════════════════════════════════════
+	// STORE API (public, no auth)
+	// ═══════════════════════════════════════════════════════
+	r.Route("/store", func(r chi.Router) {
+		r.Use(httprate.LimitByIP(60, 1*time.Minute))
+
+		// Store landing page content (admin-managed)
+		r.Get("/content", func(w http.ResponseWriter, r *http.Request) {
+			all, err := settingsRepo.GetAll(r.Context())
+			if err != nil {
+				http.Error(w, "failed to load content", 500)
+				return
+			}
+			content := map[string]json.RawMessage{}
+			storeKeys := []string{
+				"store_hero", "store_trust_badges", "store_problems",
+				"store_comparison", "store_faq", "store_cta",
+				"store_pricing", "store_testimonials", "store_sticky_cta",
+			}
+			for _, k := range storeKeys {
+				if v, ok := all[k]; ok && v != "" {
+					content[k] = json.RawMessage(v)
+				}
+			}
+			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("Cache-Control", "public, max-age=60")
+			w.WriteHeader(200)
+			json.NewEncoder(w).Encode(content)
+		})
+
+		// Listings
+		r.Get("/listings", storePublicH.ListListings)
+		r.Get("/listings/{slug}", storePublicH.GetListing)
+		r.Get("/listings/{slug}/reviews", storePublicH.GetReviews)
+		r.Get("/categories", storePublicH.ListCategories)
+
+		// Portfolio
+		r.Get("/portfolio", storePublicH.ListPortfolio)
+		r.Get("/portfolio/{slug}", storePublicH.GetPortfolioItem)
+
+		// Payment methods
+		r.Get("/payment-methods", storePublicH.ListPaymentMethods)
+
+		// Orders
+		r.Post("/orders", storePublicH.CreateOrder)
+		r.Post("/orders/track", storePublicH.TrackOrder)
+		r.Get("/orders/{orderNumber}", storePublicH.GetOrderByToken)
+		r.Get("/orders/{orderNumber}/download", storePublicH.DownloadFile)
+		r.Post("/orders/{orderNumber}/review", storePublicH.SubmitReview)
+	})
+
+	// Webhooks (no auth, validated by signature)
+	r.Route("/webhooks", func(r chi.Router) {
+		r.Post("/tripay", storePublicH.TripayWebhook)
+		r.Post("/paydisini", storePublicH.PaydisiniWebhook)
+	})
+
 	// ── Public active ads (for rendering in frontend) ───
 	r.Get("/ads/active", func(w http.ResponseWriter, r *http.Request) {
 		items, err := adsRepo.FindActive(r.Context())

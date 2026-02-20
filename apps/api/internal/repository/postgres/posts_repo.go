@@ -35,7 +35,7 @@ func (r *PostsRepo) FindAll(ctx context.Context, filter posts.PostListFilter) (*
 	}
 
 	if filter.CategoryID != "" {
-		conditions = append(conditions, fmt.Sprintf("p.category_id = $%d", argIdx))
+		conditions = append(conditions, fmt.Sprintf("c.slug = $%d", argIdx))
 		args = append(args, filter.CategoryID)
 		argIdx++
 	}
@@ -52,7 +52,7 @@ func (r *PostsRepo) FindAll(ctx context.Context, filter posts.PostListFilter) (*
 	}
 
 	// Count total
-	countQuery := fmt.Sprintf(`SELECT COUNT(*) FROM posts p %s`, where)
+	countQuery := fmt.Sprintf(`SELECT COUNT(*) FROM posts p LEFT JOIN categories c ON p.category_id = c.id %s`, where)
 	var total int
 	if err := r.db.QueryRow(ctx, countQuery, args...).Scan(&total); err != nil {
 		return nil, err
